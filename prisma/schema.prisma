@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model educational_resource {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title    String @db.VarChar(255)
+  content  String
+  category String @db.VarChar(50)
+}
+
+model financial_report {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String       @db.Uuid
+  report_date     DateTime     @db.Date
+  report_data     String
+  organization    organization @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model halal_investment_product {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String       @db.VarChar(255)
+  description String?
+  performance Float
+  investment  investment[]
+}
+
+model investment {
+  id                          String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  investment_portfolio_id     String                   @db.Uuid
+  halal_investment_product_id String                   @db.Uuid
+  amount                      Float
+  halal_investment_product    halal_investment_product @relation(fields: [halal_investment_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  investment_portfolio        investment_portfolio     @relation(fields: [investment_portfolio_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model investment_portfolio {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String       @db.Uuid
+  investment investment[]
+  user       user         @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model organization {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String             @db.VarChar(255)
+  owner_id         String             @db.Uuid
+  financial_report financial_report[]
+  user             user               @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                String?                @unique @db.VarChar(255)
+  firstName            String?                @db.VarChar(255)
+  lastName             String?                @db.VarChar(255)
+  roq_user_id          String                 @db.VarChar(255)
+  tenant_id            String                 @db.VarChar(255)
+  investment_portfolio investment_portfolio[]
+  organization         organization[]
+}
